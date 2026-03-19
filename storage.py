@@ -3,98 +3,120 @@
 
 import json
 import os
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 from datetime import datetime
-from models import Patient, DailyLog
+from models import Patient, SymptomEntry, MedicationEntry, EnvironmentEntry
 
 
-DATA_DIR = "data"
-PATIENT_FILE = os.path.join(DATA_DIR, "patient.json")
-LOGS_DIR = os.path.join(DATA_DIR, "logs")
+class StorageManager:
+    """Handles all JSON-based reading and writing for FlareTrack data."""
 
+    def __init__(self, data_dir: str = "data"):
+        self.data_dir = data_dir
+        self.patient_file = os.path.join(data_dir, "patient.json")
+        self.logs_dir = os.path.join(data_dir, "logs")
+        self._ensure_dirs()
 
-def ensure_dirs():
-    """Create necessary directories if they don't exist."""
-    os.makedirs(DATA_DIR, exist_ok=True)
-    os.makedirs(LOGS_DIR, exist_ok=True)
+    def _ensure_dirs(self):
+        """Create necessary directories if they don't exist."""
+        os.makedirs(self.data_dir, exist_ok=True)
+        os.makedirs(self.logs_dir, exist_ok=True)
 
+    def _log_path(self, date_str: str) -> str:
+        return os.path.join(self.logs_dir, date_str + ".json")
 
-# ---- Patient Storage ----
+    def _load_day(self, date_str: str) -> dict:
+        """Load the raw dict for a given day, or return a blank structure."""
+        path = self._log_path(date_str)
+        if not os.path.exists(path):
+            return {"date": date_str, "symptoms": [], "medications": [], "environment": None}
+        with open(path, "r") as f:
+            return json.load(f)
 
-def save_patient(patient: Patient) -> None:
-    ensure_dirs()
-    with open(PATIENT_FILE, "w") as f:
-        json.dump(patient.to_dict(), f, indent=2)
-    print(f"[Storage] Patient profile saved for {patient.name}.")
+    def _save_day(self, date_str: str, data: dict):
+        """Write the raw dict for a given day to disk."""
+        path = self._log_path(date_str)
+        with open(path, "w") as f:
+            json.dump(data, f, indent=2)
 
+    # ========== PATIENT ==========
 
-def load_patient() -> Optional[Patient]:
-    if not os.path.exists(PATIENT_FILE):
-        return None
-    with open(PATIENT_FILE, "r") as f:
-        data = json.load(f)
-    return Patient.from_dict(data)
+    def save_patient(self, patient: Patient) -> None:
+        """Persist patient profile to disk."""
+        with open(self.patient_file, "w") as f:
+            json.dump(patient.to_dict(), f, indent=2)
+        print("[Storage] Patient profile saved for " + patient.name + ".")
 
+    def load_patient(self) -> Optional[Patient]:
+        """Load patient profile from disk, or return None if not found."""
+        if not os.path.exists(self.patient_file):
+            return None
+        with open(self.patient_file, "r") as f:
+            data = json.load(f)
+        return Patient.from_dict(data)
 
-# ---- Daily Log Storage ----
+    # ========== SYMPTOMS ==========
 
-def _log_path(date_str: str) -> str:
-    return os.path.join(LOGS_DIR, f"{date_str}.json")
+    def save_symptom(self, entry: SymptomEntry, date_str: str) -> None:
+        """Append a symptom entry to the day's log."""
+        day = self._load_day(date_str)
+        day["symptoms"].append(entry.to_dict())
+        self._save_day(date_str, day)
 
+    def load_symptoms(self, date_str: str) -> List[SymptomEntry]:
+        """Load all symptom entries for a given date."""
+        day = self._load_day(date_str)
+        return [SymptomEntry.from_dict(s) for s in day.get("symptoms", [])]
 
-def save_daily_log(log: DailyLog) -> None:
-    ensure_dirs()
-    path = _log_path(log.date)
-    with open(path, "w") as f:
-        json.dump(log.to_dict(), f, indent=2)
-    print(f"[Storage] Log saved for {log.date}.")
+    # ========== MEDICATIONS ==========
 
+    def save_medication(self, entry: MedicationEntry, date_str: str) -> None:
+        """Append a medication entry to the day's log."""
+        day = self._load_day(date_str)
+        day["medications"].append(entry.to_dict())
+        self._save_day(date_str, day)
 
-def load_daily_log(date_str: str) -> Optional[DailyLog]:
-    path = _log_path(date_str)
-    if not os.path.exists(path):
-        return None
-    with open(path, "r") as f:
-        data = json.load(f)
-    return DailyLog.from_dict(data)
+    def load_medications(self, date_str: str) -> List[MedicationEntry]:
+        """Load all medication entries for a given date."""
+        day = self._load_day(date_str)
+        return [MedicationEntry.from_dict(m) for m in day.get("medications", [])]
 
+    # ========== ENVIRONMENT ==========
 
-def load_all_logs() -> List[DailyLog]:
-    """Load all daily logs sorted by date ascending."""
-    ensure_dirs()
-    logs = []
-    for filename in sorted(os.listdir(LOGS_DIR)):
-        if filename.endswith(".json"):
-            with open(os.path.join(LOGS_DIR, filename), "r") as f:
-                data = json.load(f)
-            logs.append(DailyLog.from_dict(data))
-    return logs
+    def save_environment(self, entry: EnvironmentEntry, date_str: str) -> None:
+        """Save the environment entry for a given date (one per day)."""
+        day = self._load_day(date_str)
+        day["environment"] = entry.to_dict()
+        self._save_day(date_str, day)
 
+    def load_environment(self, date_str: str) -> Optional[EnvironmentEntry]:
+        """Load the environment entry for a given date, or None."""
+        day = self._load_day(date_str)
+        env = day.get("environment")
+        if env is None:
+            return None
+        return EnvironmentEntry.from_dict(env)
 
-def load_logs_range(start_date: str, end_date: str) -> List[DailyLog]:
-    """Load logs within a date range (inclusive). Dates as YYYY-MM-DD strings."""
-    all_logs = load_all_logs()
-    return [log for log in all_logs if start_date <= log.date <= end_date]
+    # ========== UTILITIES ==========
 
+    def list_log_dates(self) -> List[str]:
+        """Return all dates that have a saved log file, sorted ascending."""
+        dates = []
+        for filename in sorted(os.listdir(self.logs_dir)):
+            if filename.endswith(".json"):
+                dates.append(filename[:-5])  # strip .json
+        return dates
 
-def delete_daily_log(date_str: str) -> bool:
-    path = _log_path(date_str)
-    if os.path.exists(path):
-        os.remove(path)
-        print(f"[Storage] Log for {date_str} deleted.")
-        return True
-    print(f"[Storage] No log found for {date_str}.")
-    return False
-
-
-def export_logs_json(output_path: str) -> None:
-    """Export all logs to a single consolidated JSON file."""
-    logs = load_all_logs()
-    export_data = {
-        "exported_at": datetime.now().isoformat(),
-        "total_days": len(logs),
-        "logs": [log.to_dict() for log in logs],
-    }
-    with open(output_path, "w") as f:
-        json.dump(export_data, f, indent=2)
-    print(f"[Storage] Exported {len(logs)} logs to {output_path}.")
+    def export_all_json(self, output_path: str) -> None:
+        """Export every day's log to a single consolidated JSON file."""
+        all_data = []
+        for date_str in self.list_log_dates():
+            all_data.append(self._load_day(date_str))
+        export = {
+            "exported_at": datetime.now().isoformat(),
+            "total_days": len(all_data),
+            "logs": all_data,
+        }
+        with open(output_path, "w") as f:
+            json.dump(export, f, indent=2)
+        print("[Storage] Exported " + str(len(all_data)) + " days to " + output_path + ".")
