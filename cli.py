@@ -2,37 +2,35 @@
 # Command-line interface for FlareTrack
 
 import os
-import sys
-from datetime import datetime
 from tracker import ChronicTracker
 from ai_engine import FlareUpPredictor
 from storage import StorageManager
 from models import Patient
 
+
 class FlareTrackCLI:
     """Interactive command-line interface for the health tracking application."""
-    
+
     def __init__(self, tracker: ChronicTracker, predictor: FlareUpPredictor):
         self.tracker = tracker
         self.predictor = predictor
         self.user_name = tracker.patient.name
-    
+
     def clear_screen(self):
         os.system('cls' if os.name == 'nt' else 'clear')
-    
+
     def print_header(self, title):
-        print("
-" + "="*50)
-        print(f" {title.upper()} ".center(50, "="))
-        print("="*50 + "
-")
-    
+        print()
+        print("=" * 50)
+        print((" " + title.upper() + " ").center(50, "="))
+        print("=" * 50)
+        print()
+
     def run(self):
         """Main application loop."""
         while True:
             self.clear_screen()
-            self.print_header(f"FlareTrack - Welcome, {self.user_name}")
-            
+            self.print_header("FlareTrack - Welcome, " + self.user_name)
             print("1. Log Symptom")
             print("2. Log Medication")
             print("3. Log Environmental Factors")
@@ -41,10 +39,9 @@ class FlareTrackCLI:
             print("6. Adherence & Trend Reports")
             print("7. Search Logs by Trigger")
             print("0. Exit")
-            
-            choice = input("
-Select an option: ")
-            
+            print()
+            choice = input("Select an option: ")
+
             if choice == '1':
                 self.menu_log_symptom()
             elif choice == '2':
@@ -60,12 +57,11 @@ Select an option: ")
             elif choice == '7':
                 self.menu_search()
             elif choice == '0':
-                print("
-Stay healthy! Goodbye.")
+                print()
+                print("Stay healthy! Goodbye.")
                 break
             else:
-                input("
-Invalid choice. Press Enter to try again...")
+                input("Invalid choice. Press Enter to try again...")
 
     # ========== LOGGING MENUS ==========
 
@@ -76,9 +72,8 @@ Invalid choice. Press Enter to try again...")
             severity = int(input("Severity (0-10): "))
             location = input("Body location (optional): ")
             desc = input("Description (optional): ")
-            triggers = input("Triggers (comma separated): ").split(",")
-            triggers = [t.strip() for t in triggers if t.strip()]
-            
+            raw = input("Triggers (comma separated, or leave blank): ")
+            triggers = [t.strip() for t in raw.split(",") if t.strip()]
             self.tracker.log_symptom(
                 symptom_name=name,
                 severity=severity,
@@ -86,37 +81,39 @@ Invalid choice. Press Enter to try again...")
                 description=desc,
                 triggers=triggers
             )
-            input("
-Symptom logged successfully! Press Enter to return...")
+            print()
+            input("Symptom logged successfully! Press Enter to return...")
         except ValueError as e:
-            input(f"
-Error: {e}. Press Enter to try again...")
+            print()
+            input("Error: " + str(e) + ". Press Enter to try again...")
 
     def menu_log_medication(self):
         self.print_header("Log Medication")
         name = input("Medication name: ")
         dosage = input("Dosage (e.g. 500mg): ")
-        print("
-Status options: taken, missed, late, skipped")
+        print()
+        print("Status options: taken, missed, late, skipped")
         status = input("Status: ").lower()
-        
         try:
             self.tracker.log_medication(name, dosage, status)
-            input("
-Medication logged successfully! Press Enter to return...")
+            print()
+            input("Medication logged successfully! Press Enter to return...")
         except ValueError as e:
-            input(f"
-Error: {e}. Press Enter to try again...")
+            print()
+            input("Error: " + str(e) + ". Press Enter to try again...")
 
     def menu_log_environment(self):
         self.print_header("Log Environment & Lifestyle")
         try:
             weather = input("Weather description: ")
-            temp = float(input("Temperature: ") or 0)
-            sleep = float(input("Hours of sleep: ") or 7)
-            stress = int(input("Stress level (1-10): ") or 5)
-            exercise = int(input("Exercise minutes: ") or 0)
-            
+            temp_raw = input("Temperature (leave blank to skip): ")
+            temp = float(temp_raw) if temp_raw.strip() else None
+            sleep_raw = input("Hours of sleep: ")
+            sleep = float(sleep_raw) if sleep_raw.strip() else 7.0
+            stress_raw = input("Stress level (1-10): ")
+            stress = int(stress_raw) if stress_raw.strip() else 5
+            ex_raw = input("Exercise minutes: ")
+            exercise = int(ex_raw) if ex_raw.strip() else 0
             self.tracker.log_environment(
                 weather=weather,
                 temperature=temp,
@@ -124,107 +121,127 @@ Error: {e}. Press Enter to try again...")
                 stress_level=stress,
                 exercise_minutes=exercise
             )
-            input("
-Environmental factors logged! Press Enter to return...")
+            print()
+            input("Environmental factors logged! Press Enter to return...")
         except ValueError:
-            input("
-Invalid input. Press Enter to try again...")
+            print()
+            input("Invalid input. Press Enter to try again...")
 
     # ========== ANALYSIS MENUS ==========
 
     def menu_view_summary(self):
         self.print_header("Today's Health Summary")
         summary = self.tracker.get_daily_summary()
-        
-        print(f"Date: {summary['date']}")
-        print(f"Patient: {summary['patient']}")
-        
-        print("
---- Symptoms ---")
+        print("Date:    " + summary['date'])
+        print("Patient: " + summary['patient'])
+        print()
+        print("--- Symptoms ---")
         if not summary['symptoms']:
             print("No symptoms logged today.")
         for s in summary['symptoms']:
-            print(f"• {s['symptom_name']}: Severity {s['severity']} ({s['location']})")
-            
-        print("
---- Medications ---")
+            print("  * " + s['symptom_name'] + ": Severity " + str(s['severity']) + " (" + s['location'] + ")")
+        print()
+        print("--- Medications ---")
         if not summary['medications']:
             print("No medications logged today.")
         for m in summary['medications']:
-            print(f"• {m['medication_name']} {m['dosage']}: {m['status'].upper()}")
-            
-        print("
---- Environment ---")
+            print("  * " + m['medication_name'] + " " + m['dosage'] + ": " + m['status'].upper())
+        print()
+        print("--- Environment ---")
         if summary['environment']:
             env = summary['environment']
-            print(f"Weather: {env['weather']}")
-            print(f"Sleep: {env['sleep_hours']} hrs | Stress: {env['stress_level']}/10")
+            print("  Weather: " + str(env.get('weather', '')))
+            print("  Sleep:   " + str(env.get('sleep_hours', '')) + " hrs")
+            print("  Stress:  " + str(env.get('stress_level', '')) + "/10")
         else:
             print("No environmental data logged today.")
-            
-        input("
-Press Enter to return...")
+        print()
+        input("Press Enter to return...")
 
     def menu_ai_prediction(self):
         self.print_header("AI Flare Prediction")
-        print("Analyzing your historical patterns...
-")
-        
+        print("Analyzing your historical patterns...")
+        print()
         prediction = self.predictor.predict_flare_risk()
-        
         if 'error' in prediction:
-            print(f"NOTICE: {prediction['error']}")
+            print("NOTICE: " + prediction['error'])
         else:
             risk = prediction['risk_level'].upper()
-            color = "!!!" if risk == "HIGH" else "!!" if risk == "MODERATE" else "✓"
-            
-            print(f"7-DAY FLARE RISK: {color} {risk} {color}")
-            print(f"Risk Score: {prediction['risk_score']}")
-            print(f"Confidence: {prediction['confidence']*100}%")
-            
-            print("
-Contributing Factors:")
+            marker = "!!!" if risk == "HIGH" else "!!" if risk == "MODERATE" else "OK"
+            print("7-DAY FLARE RISK: [" + marker + "] " + risk)
+            print("Risk Score:       " + str(prediction['risk_score']))
+            print("Confidence:       " + str(int(prediction['confidence'] * 100)) + "%")
+            print()
+            print("Contributing Factors:")
             factors = prediction['factors']
-            print(f"- Recent Flare Days: {factors['recent_flares']}")
-            print(f"- Average Severity: {factors['avg_severity']}/10")
-            print(f"- Adherence Rate: {factors['medication_adherence']*100}%")
-            
-            print("
-Recommendations:")
+            print("  Recent Flare Days: " + str(factors['recent_flares']))
+            print("  Avg Severity:      " + str(factors['avg_severity']) + "/10")
+            print("  Adherence Rate:    " + str(int(factors['medication_adherence'] * 100)) + "%")
+            print()
+            print("Recommendations:")
             for rec in prediction['recommendations']:
-                print(f"• {rec}")
-                
-        input("
-Press Enter to return...")
+                print("  * " + rec)
+        print()
+        input("Press Enter to return...")
 
     def menu_reports(self):
         self.print_header("Trends & Adherence Reports")
-        
         adherence = self.tracker.get_medication_adherence(days=14)
-        print(f"14-Day Medication Adherence: {adherence['adherence_rate']:.1f}%")
-        print(f"Doses: {adherence['taken']} taken / {adherence['total_doses']} total")
-        
-        print("
-Environmental Correlations (30 Days):")
+        print("14-Day Medication Adherence: " + str(round(adherence.get('adherence_rate', 0), 1)) + "%")
+        taken = adherence.get('taken', 0)
+        total = adherence.get('total_doses', 0)
+        print("Doses: " + str(taken) + " taken / " + str(total) + " total")
+        print()
+        print("Environmental Correlations (30 Days):")
         correlations = self.predictor.correlate_symptoms_with_environment()
         if 'error' in correlations:
-            print(f"- {correlations['error']}")
+            print("  " + correlations['error'])
         else:
-            print(f"- Sleep: Flare days had {correlations['sleep']['difference']} fewer hours")
-            print(f"- Stress: Flare days were {correlations['stress']['difference']} points higher")
-            
-        input("
-Press Enter to return...")
+            sleep_diff = correlations['sleep']['difference']
+            stress_diff = correlations['stress']['difference']
+            print("  Sleep:  Flare days had " + str(sleep_diff) + " fewer hours")
+            print("  Stress: Flare days were " + str(stress_diff) + " points higher")
+        print()
+        input("Press Enter to return...")
 
     def menu_search(self):
         self.print_header("Search by Trigger")
-        trigger = input("Enter trigger to search (e.g. 'caffeine', 'stress'): ")
+        trigger = input("Enter trigger to search (e.g. caffeine, stress): ")
         results = self.tracker.search_by_trigger(trigger)
-        
-        print(f"
-Found {len(results)} matches for '{trigger}':")
+        print()
+        print("Found " + str(len(results)) + " match(es) for '" + trigger + "':")
         for res in results:
-            print(f"• {res.timestamp[:10]}: {res.symptom_name} (Severity {res.severity})")
-            
-        input("
-Press Enter to return...")
+            print("  * " + res.timestamp[:10] + ": " + res.symptom_name + " (Severity " + str(res.severity) + ")")
+        print()
+        input("Press Enter to return...")
+
+
+def main_menu():
+    """Entry point called by main.py. Sets up patient, storage, tracker, and runs the CLI."""
+    print()
+    print("=" * 50)
+    print("    Welcome to FlareTrack    ".center(50, "="))
+    print("=" * 50)
+    print()
+
+    storage = StorageManager()
+
+    # Load existing patient or create new one
+    patient = storage.load_patient()
+    if patient is None:
+        print("No patient profile found. Let's create one.")
+        print()
+        name = input("Your name: ")
+        age_raw = input("Your age: ")
+        age = int(age_raw) if age_raw.strip().isdigit() else 0
+        diag_raw = input("Diagnoses (comma separated, or leave blank): ")
+        diagnoses = [d.strip() for d in diag_raw.split(",") if d.strip()]
+        patient = Patient(name=name, age=age, diagnosis=diagnoses)
+        storage.save_patient(patient)
+        print()
+        print("Profile created for " + patient.name + ".")
+
+    tracker = ChronicTracker(patient=patient, storage_manager=storage)
+    predictor = FlareUpPredictor(storage_manager=storage)
+    app = FlareTrackCLI(tracker=tracker, predictor=predictor)
+    app.run()
