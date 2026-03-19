@@ -1,0 +1,18 @@
+# requirements.txt
+# Python dependencies for Chronic Illness Tracker
+
+# Core requirements (already in standard library)
+# - dataclasses (Python 3.7+)
+# - datetime
+# - json
+# - typing
+# - uuid
+
+# Optional: Add these for advanced ML features
+# scikit-learn>=1.0.0
+# numpy>=1.21.0
+# pandas>=1.3.0
+# matplotlib>=3.4.0
+# tensorflow>=2.8.0  # For deep learning models
+
+# No external dependencies required for basic functionality!
