@@ -87,3 +87,7 @@ MIT License
 - Always consult healthcare providers for medical decisions
 - AI predictions are probabilistic, not diagnostic
 - Store all health data securely and privately
+
+## AI Usage Attribution
+
+**This program was fully written by Claude Sonet 4.6 under the close supervision and guidance of a real human.**
