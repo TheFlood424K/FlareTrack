@@ -232,3 +232,9 @@ class DailyLog:
             m for m in self.medications
             if m.status in (MedicationStatus.MISSED.value, MedicationStatus.SKIPPED.value)
         ]
+
+
+# Alias so that tracker.py, cli.py, ai_engine.py, and storage.py
+# can all use the shorter name 'EnvironmentEntry'.
+EnvironmentEntry = EnvironmentalEntry
+
