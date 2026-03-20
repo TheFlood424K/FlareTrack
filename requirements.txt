@@ -15,9 +15,11 @@
 # matplotlib>=3.4.0
 # tensorflow>=2.8.0  # For deep learning models
 
-# No external dependencies required for basic functionality!
+# Mobile app dependencies (Linux/WSL only - for Android builds)
+# NOTE: Windows users must use WSL2 or Linux VM to build Android APK
+# Install command for Linux/WSL: pip3 install kivy==2.2.1 buildozer==1.5.0 cython==0.29.36
 
-# Mobile app dependencies (for Android/Kivy)
-kivy==2.2.1
-buildozer==1.5.0
-cython==0.29.36
+# Uncomment these lines if you're on Linux/WSL and want to build Android APK:
+# kivy==2.2.1
+# buildozer==1.5.0
+# cython==0.29.36
