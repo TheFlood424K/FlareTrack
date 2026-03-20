@@ -8,6 +8,9 @@
 # - typing
 # - uuid
 
+# Security and encryption
+cryptography>=41.0.0  # AES-256 encryption for sensitive health data
+
 # Optional: Add these for advanced ML features
 # scikit-learn>=1.0.0
 # numpy>=1.21.0
