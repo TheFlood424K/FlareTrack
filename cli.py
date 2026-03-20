@@ -67,11 +67,19 @@ class FlareTrackCLI:
 
     def menu_log_symptom(self):
         self.print_header("Log New Symptom")
+        print("AI Tip: Consistent logging of symptoms helps the predictor")
+        print("identify patterns and triggers for your flare-ups.")
+        print()
+        
         name = input("Symptom name: ")
         try:
             severity = int(input("Severity (0-10): "))
             location = input("Body location (optional): ")
             desc = input("Description (optional): ")
+            
+            print("
+AI-Recognized Triggers (examples):")
+            print("stress, caffeine, poor sleep, weather, exercise, diet")
             raw = input("Triggers (comma separated, or leave blank): ")
             triggers = [t.strip() for t in raw.split(",") if t.strip()]
 
@@ -90,6 +98,9 @@ class FlareTrackCLI:
 
     def menu_log_medication(self):
         self.print_header("Log Medication")
+        print("AI Tip: Adherence rate is a major factor in flare-up prediction.")
+        print()
+        
         name = input("Medication name: ")
         dosage = input("Dosage (e.g. 500mg): ")
         print()
@@ -106,9 +117,17 @@ class FlareTrackCLI:
 
     def menu_log_environment(self):
         self.print_header("Log Environment & Lifestyle")
+        print("AI-Recognized Variables:")
+        print(" * weather (description)")
+        print(" * temperature_f (numeric)")
+        print(" * sleep_hours (numeric, e.g. 7.5)")
+        print(" * stress_level (1-10)")
+        print(" * exercise_minutes (numeric)")
+        print()
+        
         try:
             weather = input("Weather description: ")
-            temp_raw = input("Temperature (leave blank to skip): ")
+            temp_raw = input("Temperature (F): ")
             temp = float(temp_raw) if temp_raw.strip() else None
 
             sleep_raw = input("Hours of sleep: ")
@@ -248,14 +267,19 @@ def main_menu():
         for attempt in range(3):
             password = getpass.getpass("Enter app password: ")
             if storage.encryption.verify_password(password):
-                print("\nAccess granted!\n")
+                print("
+Access granted!
+")
                 break
             else:
-                print("\nIncorrect password.")
+                print("
+Incorrect password.")
                 if attempt < 2:
-                    print(f"You have {2 - attempt} attempt(s) remaining.\n")
+                    print(f"You have {2 - attempt} attempt(s) remaining.
+")
                 else:
-                    print("Too many failed attempts. Exiting.\n")
+                    print("Too many failed attempts. Exiting.
+")
                     return
     elif storage.use_encryption:
         # First launch with encryption enabled - set up password
@@ -265,15 +289,19 @@ def main_menu():
         while True:
             pw1 = getpass.getpass("Choose an app password: ")
             if len(pw1) < 4:
-                print("Password must be at least 4 characters.\n")
+                print("Password must be at least 4 characters.
+")
                 continue
             pw2 = getpass.getpass("Confirm password: ")
             if pw1 == pw2:
                 storage.encryption.set_password(pw1)
-                print("\nPassword set successfully!\n")
+                print("
+Password set successfully!
+")
                 break
             else:
-                print("Passwords do not match. Try again.\n")
+                print("Passwords do not match. Try again.
+")
 
     # ========== PATIENT PROFILE SETUP ==========
     # Load existing patient or create new one
