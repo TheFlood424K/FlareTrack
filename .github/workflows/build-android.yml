@@ -28,21 +28,19 @@ jobs:
           restore-keys: |
             buildozer-${{ runner.os }}-
 
-      - name: Cache pip packages
+      - name: Cache Buildozer local directory
         uses: actions/cache@v4
         with:
-          path: ~/.cache/pip
-          key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+          path: .buildozer
+          key: buildozer-local-${{ runner.os }}-${{ hashFiles('buildozer.spec') }}
           restore-keys: |
-            pip-${{ runner.os }}-
+            buildozer-local-${{ runner.os }}-
 
       - name: Install system dependencies
         run: |
-          sudo apt-get update
+          sudo apt-get update -y
           sudo apt-get install -y \
             python3-pip \
-            python3-setuptools \
-            python3-wheel \
             build-essential \
             git \
             ffmpeg \
@@ -55,13 +53,13 @@ jobs:
             libavformat-dev \
             libavcodec-dev \
             zlib1g-dev \
-            libgstreamer1.0-dev \
-            gstreamer1.0-plugins-base \
-            gstreamer1.0-plugins-good \
             libltdl-dev \
             libffi-dev \
             autoconf \
             libtool \
+            pkg-config \
+            cmake \
+            unzip \
             openjdk-17-jdk
 
       - name: Set JAVA_HOME
@@ -91,6 +89,6 @@ jobs:
         with:
           name: buildozer-logs
           path: |
-            .buildozer/android/platform/build-armeabi-v7a/build/other_builds/
-            .buildozer/*.log
+            .buildozer/logs/
+            buildozer.log
           retention-days: 7
