@@ -68,7 +68,8 @@ jobs:
       - name: Install Python build tools
         run: |
           pip install --upgrade pip
-          pip install buildozer cython
+          pip install "cython<3.0"
+          pip install buildozer
 
       - name: Build APK
         run: |
