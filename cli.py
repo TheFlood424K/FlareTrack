@@ -70,19 +70,16 @@ class FlareTrackCLI:
         print("AI Tip: Consistent logging of symptoms helps the predictor")
         print("identify patterns and triggers for your flare-ups.")
         print()
-        
         name = input("Symptom name: ")
         try:
             severity = int(input("Severity (0-10): "))
             location = input("Body location (optional): ")
             desc = input("Description (optional): ")
-            
-            print("
-AI-Recognized Triggers (examples):")
+            print()
+            print("AI-Recognized Triggers (examples):")
             print("stress, caffeine, poor sleep, weather, exercise, diet")
             raw = input("Triggers (comma separated, or leave blank): ")
             triggers = [t.strip() for t in raw.split(",") if t.strip()]
-
             self.tracker.log_symptom(
                 symptom_name=name,
                 severity=severity,
@@ -100,13 +97,11 @@ AI-Recognized Triggers (examples):")
         self.print_header("Log Medication")
         print("AI Tip: Adherence rate is a major factor in flare-up prediction.")
         print()
-        
         name = input("Medication name: ")
         dosage = input("Dosage (e.g. 500mg): ")
         print()
         print("Status options: taken, missed, late, skipped")
         status = input("Status: ").lower()
-
         try:
             self.tracker.log_medication(name, dosage, status)
             print()
@@ -118,27 +113,22 @@ AI-Recognized Triggers (examples):")
     def menu_log_environment(self):
         self.print_header("Log Environment & Lifestyle")
         print("AI-Recognized Variables:")
-        print(" * weather (description)")
-        print(" * temperature_f (numeric)")
-        print(" * sleep_hours (numeric, e.g. 7.5)")
-        print(" * stress_level (1-10)")
-        print(" * exercise_minutes (numeric)")
+        print("  * weather (description)")
+        print("  * temperature_f (numeric, e.g. 72.5)")
+        print("  * sleep_hours (numeric, e.g. 7.5)")
+        print("  * stress_level (1-10)")
+        print("  * exercise_minutes (numeric)")
         print()
-        
         try:
             weather = input("Weather description: ")
-            temp_raw = input("Temperature (F): ")
+            temp_raw = input("Temperature in F (leave blank to skip): ")
             temp = float(temp_raw) if temp_raw.strip() else None
-
             sleep_raw = input("Hours of sleep: ")
             sleep = float(sleep_raw) if sleep_raw.strip() else 7.0
-
             stress_raw = input("Stress level (1-10): ")
             stress = int(stress_raw) if stress_raw.strip() else 5
-
             ex_raw = input("Exercise minutes: ")
             exercise = int(ex_raw) if ex_raw.strip() else 0
-
             self.tracker.log_environment(
                 weather=weather,
                 temperature=temp,
@@ -160,21 +150,18 @@ AI-Recognized Triggers (examples):")
         print("Date: " + summary['date'])
         print("Patient: " + summary['patient'])
         print()
-
         print("--- Symptoms ---")
         if not summary['symptoms']:
             print("No symptoms logged today.")
         for s in summary['symptoms']:
             print(" * " + s['symptom_name'] + ": Severity " + str(s['severity']) + " (" + s['location'] + ")")
         print()
-
         print("--- Medications ---")
         if not summary['medications']:
             print("No medications logged today.")
         for m in summary['medications']:
             print(" * " + m['medication_name'] + " " + m['dosage'] + ": " + m['status'].upper())
         print()
-
         print("--- Environment ---")
         if summary['environment']:
             env = summary['environment']
@@ -190,7 +177,6 @@ AI-Recognized Triggers (examples):")
         self.print_header("AI Flare Prediction")
         print("Analyzing your historical patterns...")
         print()
-
         prediction = self.predictor.predict_flare_risk()
         if 'error' in prediction:
             print("NOTICE: " + prediction['error'])
@@ -201,14 +187,12 @@ AI-Recognized Triggers (examples):")
             print("Risk Score: " + str(prediction['risk_score']))
             print("Confidence: " + str(int(prediction['confidence'] * 100)) + "%")
             print()
-
             print("Contributing Factors:")
             factors = prediction['factors']
             print(" Recent Flare Days: " + str(factors['recent_flares']))
             print(" Avg Severity: " + str(factors['avg_severity']) + "/10")
             print(" Adherence Rate: " + str(int(factors['medication_adherence'] * 100)) + "%")
             print()
-
             print("Recommendations:")
             for rec in prediction['recommendations']:
                 print(" * " + rec)
@@ -223,7 +207,6 @@ AI-Recognized Triggers (examples):")
         total = adherence.get('total_doses', 0)
         print("Doses: " + str(taken) + " taken / " + str(total) + " total")
         print()
-
         print("Environmental Correlations (30 Days):")
         correlations = self.predictor.correlate_symptoms_with_environment()
         if 'error' in correlations:
@@ -259,52 +242,47 @@ def main_menu():
     storage = StorageManager()
 
     # ========== PASSWORD AUTHENTICATION ==========
-    # Check if a password has been set
     if storage.encryption and storage.encryption.has_password():
-        # Prompt for password
         print("This app is password protected.")
         print()
         for attempt in range(3):
             password = getpass.getpass("Enter app password: ")
             if storage.encryption.verify_password(password):
-                print("
-Access granted!
-")
+                print()
+                print("Access granted!")
+                print()
                 break
             else:
-                print("
-Incorrect password.")
+                print()
+                print("Incorrect password.")
                 if attempt < 2:
-                    print(f"You have {2 - attempt} attempt(s) remaining.
-")
+                    print("You have " + str(2 - attempt) + " attempt(s) remaining.")
+                    print()
                 else:
-                    print("Too many failed attempts. Exiting.
-")
+                    print("Too many failed attempts. Exiting.")
                     return
     elif storage.use_encryption:
-        # First launch with encryption enabled - set up password
         print("Welcome! Let's set up app password protection.")
         print("This password will be required each time you launch FlareTrack.")
         print()
         while True:
             pw1 = getpass.getpass("Choose an app password: ")
             if len(pw1) < 4:
-                print("Password must be at least 4 characters.
-")
+                print("Password must be at least 4 characters.")
+                print()
                 continue
             pw2 = getpass.getpass("Confirm password: ")
             if pw1 == pw2:
                 storage.encryption.set_password(pw1)
-                print("
-Password set successfully!
-")
+                print()
+                print("Password set successfully!")
+                print()
                 break
             else:
-                print("Passwords do not match. Try again.
-")
+                print("Passwords do not match. Try again.")
+                print()
 
     # ========== PATIENT PROFILE SETUP ==========
-    # Load existing patient or create new one
     patient = storage.load_patient()
     if patient is None:
         print("No patient profile found. Let's create one.")
