@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>FlareTrack</title>
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:;">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ===================== LOCK SCREEN ===================== -->
+  <div id="lock-screen">
+    <div class="lock-card">
+      <div class="lock-logo">&#10084;&#65039; FlareTrack</div>
+      <p id="lock-subtitle">Enter your password to unlock</p>
+      <input type="password" id="lock-password" placeholder="Password" autocomplete="current-password" />
+      <p id="lock-error" class="error hidden"></p>
+      <button id="lock-submit-btn">Unlock</button>
+      <p id="no-password-msg" class="hidden muted">
+        No password set. <a href="#" id="set-password-link">Set one now</a> or
+        <a href="#" id="skip-password-link">continue without a password</a>.
+      </p>
+    </div>
+  </div>
+
+  <!-- ============= SET-PASSWORD SCREEN (first run) ========= -->
+  <div id="set-password-screen" class="hidden">
+    <div class="lock-card">
+      <div class="lock-logo">&#10084;&#65039; FlareTrack</div>
+      <p>Choose an app password to protect your health data.</p>
+      <input type="password" id="new-password" placeholder="New password" />
+      <input type="password" id="confirm-password" placeholder="Confirm password" />
+      <p id="set-pw-error" class="error hidden"></p>
+      <button id="set-pw-btn">Set Password &amp; Continue</button>
+      <button id="skip-pw-btn" class="btn-ghost">Skip (no password)</button>
+    </div>
+  </div>
+
+  <!-- ====================== MAIN APP ======================= -->
+  <div id="app" class="hidden">
+
+    <!-- Top bar -->
+    <header class="top-bar">
+      <span class="top-bar-logo">&#10084;&#65039; FlareTrack</span>
+      <div class="top-bar-center">
+        <button class="date-nav" id="prev-day-btn">&#8249;</button>
+        <input type="date" id="date-picker" />
+        <button class="date-nav" id="next-day-btn">&#8250;</button>
+        <button id="today-btn" class="btn-small">Today</button>
+      </div>
+      <div class="top-bar-right">
+        <span id="current-date-label" class="muted"></span>
+        <button id="open-data-folder-btn" class="btn-small">Open Data Folder</button>
+      </div>
+    </header>
+
+    <div class="layout">
+
+      <!-- Sidebar -->
+      <aside class="sidebar">
+
+        <section class="sidebar-section">
+          <div class="sidebar-section-header">
+            <h3>Patient</h3>
+            <button id="edit-patient-btn" class="btn-icon" title="Edit profile">&#9998;</button>
+          </div>
+          <div id="patient-summary" class="card small-text">Loading...</div>
+        </section>
+
+        <section class="sidebar-section">
+          <h3>Log History</h3>
+          <ul id="log-list" class="log-list"></ul>
+        </section>
+
+      </aside>
+
+      <!-- Main content -->
+      <section class="content">
+
+        <!-- Tabs -->
+        <nav class="tabs">
+          <button class="tab active" data-tab="symptoms">Symptoms</button>
+          <button class="tab" data-tab="meds">Medications</button>
+          <button class="tab" data-tab="environment">Environment</button>
+          <button class="tab" data-tab="summary">Summary</button>
+        </nav>
+
+        <!-- Symptoms tab -->
+        <div id="tab-symptoms" class="tab-panel active">
+          <div class="panel-header">
+            <h2>Symptoms</h2>
+            <button id="add-symptom-btn">+ Add Symptom</button>
+          </div>
+          <div class="table-wrap">
+            <table class="table" id="symptom-table">
+              <thead>
+                <tr>
+                  <th>Symptom</th>
+                  <th>Severity (0-10)</th>
+                  <th>Location</th>
+                  <th>Triggers</th>
+                  <th>Duration</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p id="no-symptoms-msg" class="empty-msg">No symptoms logged for this day. Click "+ Add Symptom" to start.</p>
+        </div>
+
+        <!-- Medications tab -->
+        <div id="tab-meds" class="tab-panel">
+          <div class="panel-header">
+            <h2>Medications</h2>
+            <button id="add-med-btn">+ Add Medication</button>
+          </div>
+          <div class="table-wrap">
+            <table class="table" id="med-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Dosage</th>
+                  <th>Status</th>
+                  <th>Time Taken</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p id="no-meds-msg" class="empty-msg">No medications logged for this day.</p>
+        </div>
+
+        <!-- Environment tab -->
+        <div id="tab-environment" class="tab-panel">
+          <h2>Environment &amp; Wellbeing</h2>
+          <div class="env-grid">
+            <label>
+              Sleep (hours)
+              <input type="number" step="0.5" min="0" max="24" id="env-sleep" placeholder="e.g. 7.5" />
+            </label>
+            <label>
+              Stress level (0-10)
+              <input type="number" min="0" max="10" id="env-stress" placeholder="0-10" />
+            </label>
+            <label>
+              Exercise (minutes)
+              <input type="number" min="0" id="env-exercise" placeholder="e.g. 30" />
+            </label>
+            <label>
+              Diet notes
+              <input type="text" id="env-diet" placeholder="e.g. gluten-free" />
+            </label>
+            <label>
+              Weather
+              <input type="text" id="env-weather" placeholder="e.g. sunny, cold" />
+            </label>
+            <label>
+              Humidity (%)
+              <input type="number" min="0" max="100" id="env-humidity" placeholder="0-100" />
+            </label>
+          </div>
+          <label class="full-label">
+            Overall wellbeing (0-10)
+            <div class="wellbeing-row">
+              <input type="range" min="0" max="10" step="1" id="wellbeing-slider" />
+              <span id="wellbeing-value">5</span>
+            </div>
+          </label>
+          <label class="full-label mt">
+            Daily notes
+            <textarea id="daily-notes" rows="5" placeholder="Anything notable today..."></textarea>
+          </label>
+        </div>
+
+        <!-- Summary tab -->
+        <div id="tab-summary" class="tab-panel">
+          <div class="panel-header">
+            <h2>Recent Overview</h2>
+            <button id="refresh-summary-btn">Refresh</button>
+          </div>
+          <div id="summary-content" class="summary-cards"></div>
+        </div>
+
+        <!-- Bottom save bar -->
+        <footer class="bottom-bar">
+          <button id="save-log-btn" class="btn-primary">&#10003; Save Day</button>
+          <span id="status-label"></span>
+        </footer>
+
+      </section>
+    </div>
+  </div>
+
+  <!-- ================ PATIENT PROFILE MODAL ================ -->
+  <div id="patient-modal" class="modal-backdrop hidden">
+    <div class="modal">
+      <h2>Patient Profile</h2>
+      <label>Name<input type="text" id="patient-name" /></label>
+      <label>Date of birth<input type="date" id="patient-dob" /></label>
+      <label>
+        Conditions (one per line)
+        <textarea id="patient-conditions" rows="4"></textarea>
+      </label>
+      <label>
+        Allergies
+        <input type="text" id="patient-allergies" />
+      </label>
+      <label>
+        Notes
+        <textarea id="patient-notes" rows="3"></textarea>
+      </label>
+      <div class="modal-actions">
+        <button id="patient-cancel-btn" class="btn-ghost">Cancel</button>
+        <button id="patient-save-btn">Save Profile</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
