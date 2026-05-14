@@ -10,9 +10,10 @@ from storage import StorageManager
 class ChronicTracker:
     """Main tracking class for logging symptoms, medications, and environmental factors."""
 
-    def __init__(self, patient: Patient, storage_manager: StorageManager):
-        self.patient = patient
-        self.storage = storage_manager
+    def __init__(self, patient: Patient, storage_manager: StorageManager, snapshot=None):
+        self.patient   = patient
+        self.storage   = storage_manager
+        self.snapshot  = snapshot  # optional ContextSnapshot for auto-trigger on flares
         self.current_date = date.today().isoformat()
 
     # ========== SYMPTOM TRACKING ==========
@@ -33,6 +34,14 @@ class ChronicTracker:
 
         self.storage.save_symptom(entry, self.current_date)
         print(f"[Tracker] Logged symptom: {symptom_name} (severity {severity})")
+
+        if severity >= 7 and self.snapshot is not None:
+            if self.snapshot.has_location():
+                print("[Snapshot] Flare severity ≥7 — fetching environmental context...")
+                self.snapshot.fetch_and_merge(self.current_date)
+            else:
+                print("[Snapshot] Add location in menu option 9 to enable auto-snapshots.")
+
         return entry
 
     def get_symptoms_by_date(self, date_str: str = None) -> List[SymptomEntry]:
