@@ -33,6 +33,8 @@ class Patient:
     patient_id: str = field(default_factory=lambda: str(uuid.uuid4())[:8])
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
     notes: str = ""
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -42,6 +44,8 @@ class Patient:
             "patient_id": self.patient_id,
             "created_at": self.created_at,
             "notes": self.notes,
+            "latitude": self.latitude,
+            "longitude": self.longitude,
         }
 
     @classmethod
@@ -53,6 +57,8 @@ class Patient:
             patient_id=data.get("patient_id", str(uuid.uuid4())[:8]),
             created_at=data.get("created_at", datetime.now().isoformat()),
             notes=data.get("notes", ""),
+            latitude=data.get("latitude"),
+            longitude=data.get("longitude"),
         )
 
 
